@@ -2,15 +2,16 @@ namespace TodoApp
 {
     public enum TaskPriority
     {
-        Low,    // Низкий
-        Medium, // Средний
-        High    // Высокий
+        Low, 
+        Medium,
+        High  
     }
 
     public enum TaskStatus
     {
-        NotStarted, // Не начата
-        InProgress, // В процессе
-        Completed   // Выполнена
+        NotStarted,       
+        InProgress,
+
+        Completed  
     }
 }
