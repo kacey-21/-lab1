@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\TodoApp.csproj",
+      "projectUniqueName": "c:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\TodoApp\\Todo\\TodoApp.csproj",
       "projectName": "TodoApp",
-      "projectPath": "C:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\TodoApp.csproj",
+      "projectPath": "c:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\TodoApp\\Todo\\TodoApp.csproj",
       "packagesPath": "C:\\Users\\kacey\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\obj\\",
+      "outputPath": "c:\\Users\\kacey\\OneDrive\\Dokumenter\\GitHub\\-lab1\\TodoApp\\Todo\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\kacey\\AppData\\Roaming\\NuGet\\NuGet.Config"
