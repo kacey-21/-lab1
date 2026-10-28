@@ -1,58 +1,64 @@
 ﻿<Window x:Class="TodoApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        xmlns:local="clr-namespace:TodoApp"
-        Title="Todo List" Height="500" Width="800"
-        Loaded="Window_Loaded">
-    <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="1*"/>
-        </Grid.ColumnDefinitions>
+        Title="Todo" Width="520" Height="600"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="16">
 
-       
-        <DockPanel Grid.Column="0" Margin="0,0,10,0">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
-                <Button Content=" Загрузить JSON " Click="BtnLoad_Click" Margin="0,0,5,0"/>
-                <Button Content=" Сохранить JSON " Click="BtnSave_Click"/>
-            </StackPanel>
-            
-            <DataGrid x:Name="DataGridTasks" AutoGenerateColumns="False" IsReadOnly="True"
-                      SelectionChanged="DataGridTasks_SelectionChanged">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="1.5*"/>
-                    <DataGridTextColumn Header="Приоритет" Binding="{Binding Priority}" Width="*"/>
-                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
-                    <DataGridTextColumn Header="Срок" Binding="{Binding DueDate, StringFormat=d}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </DockPanel>
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="NewText" Grid.Column="0" Padding="6"
+                     VerticalContentAlignment="Center"
+                     KeyDown="NewText_KeyDown"/>
+            <Button Grid.Column="1" Content="Добавить" Padding="12,6"
+                    Margin="8,0,0,0" Click="Add_Click"/>
+        </Grid>
 
-       
-        <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10">
-            <StackPanel>
-                <TextBlock Text="Детали задачи" FontWeight="Bold" Margin="0,0,0,10"/>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button Content="Все" Tag="all" Click="Filter_Click" Margin="0,0,8,0"/>
+            <Button Content="Активные" Tag="active" Click="Filter_Click" Margin="0,0,8,0"/>
+            <Button Content="Выполненные" Tag="done" Click="Filter_Click"/>
+        </StackPanel>
 
-                <TextBlock Text="Название:"/>
-                <TextBox x:Name="TxtTitle" Margin="0,0,0,10"/>
+        <ListBox x:Name="List" BorderThickness="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Описание:"/>
-                <TextBox x:Name="TxtDescription" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,10"/>
+                        <CheckBox Grid.Column="0" IsChecked="{Binding Done, Mode=TwoWay}"
+                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-                <TextBlock Text="Срок выполнения:"/>
-                <DatePicker x:Name="DpDueDate" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Text}"
+                                   VerticalAlignment="Center">
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Редактировать" Click="Edit_Click"/>
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Done}" Value="True">
+                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                            <Setter Property="Foreground" Value="Gray"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
-                <TextBlock Text="Приоритет:"/>
-                <ComboBox x:Name="CmbPriority" Margin="0,0,0,10"/>
-
-                <TextBlock Text="Статус:"/>
-                <ComboBox x:Name="CmbStatus" Margin="0,0,0,15"/>
-
-                <Button Content="Добавить новую" Click="BtnAdd_Click" Margin="0,0,0,5"/>
-                <Button Content="Сохранить изменения" Click="BtnUpdate_Click" Margin="0,0,0,5"/>
-                <Button Content="Удалить выбранную" Click="BtnDelete_Click" Foreground="Red"/>
-            </StackPanel>
-        </Border>
-    </Grid>
+                        <Button Grid.Column="2" Content="✕" Padding="6,2" Click="Delete_Click"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
 </Window>

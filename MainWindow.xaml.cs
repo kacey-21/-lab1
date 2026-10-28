@@ -1,130 +1,103 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
-namespace TodoApp
+namespace TodoApp;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    private readonly ObservableCollection<TodoItem> _items = new();
+    private string _filter = "all";
+
+    public MainWindow()
     {
-        private readonly TodoService _todoService;
-        private readonly string _defaultFilePath = "tasks.json";
+        InitializeComponent();
+        List.ItemsSource = _items;
+    }
 
-        public MainWindow()
+    private void Add_Click(object sender, RoutedEventArgs e) => AddFromInput();
+
+    private void NewText_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) AddFromInput();
+    }
+
+    private void AddFromInput()
+    {
+        var text = NewText.Text.Trim();
+        if (text.Length == 0) return;
+        _items.Add(new TodoItem { Text = text });
+        NewText.Clear();
+        NewText.Focus();
+    }
+
+    private void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TodoItem item })
+            _items.Remove(item);
+    }
+
+    private void Edit_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: TodoItem item }) return;
+
+        var dialog = new Window
         {
-            InitializeComponent();
-            _todoService = new TodoService(new JsonTaskRepository());
-            DataGridTasks.ItemsSource = _todoService.Tasks;
+            Title = "Редактировать",
+            Width = 400,
+            Height = 120,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize
+        };
 
-            CmbPriority.ItemsSource = Enum.GetValues(typeof(TaskPriority));
-            CmbStatus.ItemsSource = Enum.GetValues(typeof(TaskStatus));
-        }
+        var grid = new Grid { Margin = new Thickness(12) };
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        var box = new TextBox { Text = item.Text, Padding = new Thickness(6) };
+        Grid.SetRow(box, 0);
+        grid.Children.Add(box);
+
+        var ok = new Button
         {
-            try
-            {
-                _todoService.LoadTasks(_defaultFilePath);
-            }
-            catch
-            {
-                
-            }
-        }
-
-        private void DataGridTasks_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+            Content = "OK",
+            Width = 80,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+        Grid.SetRow(ok, 1);
+        ok.Click += (_, _) =>
         {
-            if (DataGridTasks.SelectedItem is TodoModel selectedTask)
-            {
-                TxtTitle.Text = selectedTask.Title;
-                TxtDescription.Text = selectedTask.Description;
-                DpDueDate.SelectedDate = selectedTask.DueDate;
-                CmbPriority.SelectedItem = selectedTask.Priority;
-                CmbStatus.SelectedItem = selectedTask.Status;
-            }
-        }
+            var t = box.Text.Trim();
+            if (t.Length > 0) item.Text = t;
+            dialog.Close();
+        };
+        grid.Children.Add(ok);
 
-        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        dialog.Content = grid;
+        dialog.ShowDialog();
+    }
+
+    private void Filter_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string f })
         {
-            try
-            {
-                var task = new TodoModel
-                {
-                    Title = TxtTitle.Text,
-                    Description = TxtDescription.Text,
-                    CreatedAt = DateTime.Now,
-                    DueDate = DpDueDate.SelectedDate ?? DateTime.Now.AddDays(1),
-                    Priority = CmbPriority.SelectedItem is TaskPriority p ? p : TaskPriority.Medium,
-                    Status = CmbStatus.SelectedItem is TaskStatus s ? s : TaskStatus.NotStarted
-                };
-
-                _todoService.AddTask(task);
-                ClearForm();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Ошибка валидации", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            _filter = f;
+            RefreshList();
         }
+    }
 
-        private void BtnUpdate_Click(object sender, RoutedEventArgs e)
+    private void RefreshList()
+    {
+        // Простая «фильтрация пересборкой» — меньше магии, чем ICollectionView.Filter
+        IEnumerable<TodoItem> view = _filter switch
         {
-            if (DataGridTasks.SelectedItem is TodoModel selectedTask)
-            {
-                try
-                {
-                    selectedTask.Title = TxtTitle.Text;
-                    selectedTask.Description = TxtDescription.Text;
-                    if (DpDueDate.SelectedDate.HasValue)
-                        selectedTask.DueDate = DpDueDate.SelectedDate.Value;
-                    if (CmbPriority.SelectedItem is TaskPriority p)
-                        selectedTask.Priority = p;
-                    if (CmbStatus.SelectedItem is TaskStatus s)
-                        selectedTask.Status = s;
-
-                    DataGridTasks.Items.Refresh();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Ошибка валидации", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-        }
-
-        private void BtnDelete_Click(object sender, RoutedEventArgs e)
-        {
-            if (DataGridTasks.SelectedItem is TodoModel selectedTask)
-            {
-                _todoService.RemoveTask(selectedTask);
-                ClearForm();
-            }
-        }
-
-        private void BtnSave_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new SaveFileDialog { Filter = "JSON files (*.json)|*.json", FileName = "tasks.json" };
-            if (dialog.ShowDialog() == true)
-            {
-                _todoService.SaveTasks(dialog.FileName);
-            }
-        }
-
-        private void BtnLoad_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog { Filter = "JSON files (*.json)|*.json" };
-            if (dialog.ShowDialog() == true)
-            {
-                _todoService.LoadTasks(dialog.FileName);
-            }
-        }
-
-        private void ClearForm()
-        {
-            TxtTitle.Clear();
-            TxtDescription.Clear();
-            DpDueDate.SelectedDate = null;
-            CmbPriority.SelectedIndex = -1;
-            CmbStatus.SelectedIndex = -1;
-            DataGridTasks.SelectedItem = null;
-        }
+            "active" => _items.Where(i => !i.Done),
+            "done"   => _items.Where(i => i.Done),
+            _        => _items
+        };
+        List.ItemsSource = view.ToList();
     }
 }
